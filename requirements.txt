@@ -1,0 +1,10 @@
+streamlit
+langchain
+langchain-community
+langchain_experimental
+langchain-huggingface
+langchain-ollama
+faiss-cpu
+huggingface
+pdfplumber
+ruff
