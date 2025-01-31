@@ -4,6 +4,7 @@ from langchain.chains.retrieval import create_retrieval_chain
 from langchain_ollama.llms import OllamaLLM
 from langchain_core.vectorstores.base import VectorStoreRetriever
 from langchain_core.runnables.base import Runnable
+from config.config import OLLAMA_MODEL_ID
 
 
 class QAChainBuilder:
@@ -52,7 +53,7 @@ class QAChainBuilder:
             >>> result = chain.invoke({"input": "What causes climate change?"})
             >>> print(result["answer"])
         """
-        llm = OllamaLLM(model="deepseek-r1:1.5b")
+        llm = OllamaLLM(model=OLLAMA_MODEL_ID)
         prompt_template = PromptTemplate.from_template(
             "1. Use context to answer the question\n"
             "2. If unsure, say 'I don't know'\n"
