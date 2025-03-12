@@ -20,10 +20,12 @@ class DocumentService:
     def process_files(self, uploaded_files) -> Optional[FAISS]:
         """Process multiple uploaded files and combine them into a single vector store.
 
-        Args:
+        Parameters:
+        -----------
             uploaded_files: List of uploaded files from Streamlit
 
         Returns:
+        --------
             Optional[FAISS]: Combined vector store or None if processing failed
         """
         combined_vector_store = None
@@ -58,10 +60,12 @@ class DocumentService:
     def process_uploaded_paths(self, file_paths: List[str]) -> Optional[FAISS]:
         """Process multiple file paths and combine them into a single vector store.
 
-        Args:
+        Parameters:
+        -----------
             file_paths: List of file paths to process
 
         Returns:
+        --------
             Optional[FAISS]: Combined vector store or None if processing failed
         """
         combined_vector_store = None
@@ -88,14 +92,17 @@ class DocumentService:
     def _process_single_file(self, file_path: str, file_extension: str) -> FAISS:
         """Process a single file based on its extension.
 
-        Args:
+        Parameters:
+        -----------
             file_path: Path to the file
             file_extension: Extension of the file (pdf, csv, txt)
 
         Returns:
+        --------
             FAISS: Vector store created from the file
 
         Raises:
+        -------
             ValueError: If file type is not supported
         """
         if file_extension == "pdf":
@@ -110,10 +117,12 @@ class DocumentService:
     def _create_vector_store(self, docs) -> FAISS:
         """Create a vector store from documents.
 
-        Args:
+        Parameters:
+        -----------
             docs: Document objects
 
         Returns:
+        --------
             FAISS: Vector store
         """
         return FAISS.from_documents(docs, self.embedder)
@@ -121,10 +130,12 @@ class DocumentService:
     def _process_pdf(self, file_path: str) -> FAISS:
         """Process a PDF file.
 
-        Args:
+        Parameters:
+        -----------
             file_path: Path to the PDF file
 
         Returns:
+        --------
             FAISS: Vector store created from the PDF
         """
         loader = PDFPlumberLoader(file_path)
@@ -135,10 +146,12 @@ class DocumentService:
     def _process_csv(self, file_path: str) -> FAISS:
         """Process a CSV file.
 
-        Args:
+        Parameters:
+        -----------
             file_path: Path to the CSV file
 
         Returns:
+        --------
             FAISS: Vector store created from the CSV
         """
         loader = CSVLoader(file_path)
@@ -149,10 +162,12 @@ class DocumentService:
     def _process_txt(self, file_path: str) -> FAISS:
         """Process a text file.
 
-        Args:
+        Parameters:
+        -----------
             file_path: Path to the text file
 
         Returns:
+        --------
             FAISS: Vector store created from the text file
         """
         loader = TextLoader(file_path)
@@ -163,11 +178,13 @@ class DocumentService:
     def create_retriever(self, vector_store: FAISS, top_k: int) -> VectorStoreRetriever:
         """Create a retriever from a vector store.
 
-        Args:
+        Parameters:
+        -----------
             vector_store: Vector store to create a retriever from
             top_k: Number of documents to retrieve
 
         Returns:
+        --------
             VectorStoreRetriever: Retriever
         """
         return vector_store.as_retriever(search_kwargs={"k": top_k})

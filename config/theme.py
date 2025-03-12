@@ -12,11 +12,13 @@ def apply_theme():
         .stApp {{
             background-color: {BACKGROUND};
             color: {TEXT};
+            overflow-x: hidden;
         }}
         .stChatInput {{
             position: fixed;
             bottom: 2rem;
             width: 80%;
+            max-width: 900px;
         }}
         .stChatMessage {{
             border-radius: 15px;
@@ -33,6 +35,21 @@ def apply_theme():
             background-color: {SECONDARY};
             color: white;
             margin-right: auto;
+        }}
+        /* Fix horizontal scrollbar */
+        .main .block-container {{
+            max-width: 1000px;
+            padding-top: 2rem;
+            padding-right: 1rem;
+            padding-left: 1rem;
+            padding-bottom: 3rem;
+            overflow-x: hidden;
+        }}
+        /* Improve sidebar appearance */
+        .sidebar .sidebar-content {{
+            width: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
         }}
         </style>
     """,

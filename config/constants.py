@@ -1,7 +1,5 @@
 """Application constants and configuration values."""
 
-DEFAULT_TOP_K = 3
-
 SUPPORTED_FILE_TYPES = ["pdf", "csv", "txt"]
 FILE_TYPE_HELP_TEXT = "Upload multiple PDF, CSV, or text files for analysis"
 
