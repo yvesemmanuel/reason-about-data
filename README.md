@@ -4,6 +4,9 @@ A powerful Retrieval-Augmented Generation (RAG) system that allows users to uplo
 
 ## Features
 
+- **Dual Conversation Modes**: 
+  - Direct Chat: Talk with the model without document context
+  - Document Chat: Query uploaded documents with RAG capabilities
 - **Document Processing**: Upload PDF, CSV, and text files for analysis
 - **Advanced Retrieval**: Semantic search using FAISS vector store for relevant document retrieval
 - **Fine-tuned Responses**: Control model parameters for customized outputs
@@ -24,7 +27,9 @@ The application follows a modular architecture with the following components:
 
 - Connects to Ollama for large language model capabilities
 - Provides prompt engineering for improved responses
-- Integrates retrieval with language generation
+- Offers dual modes of operation:
+  - Direct chat without retrieval
+  - Retrieval-augmented generation with document context
 - Offers customizable generation parameters:
   - Temperature (creativity control)
   - Top-p sampling (diversity control)
@@ -34,7 +39,7 @@ The application follows a modular architecture with the following components:
 ### 3. User Interface
 
 - Built with Streamlit for a responsive experience
-- Provides chat-based interaction
+- Provides chat-based interaction with mode switching
 - Offers intuitive parameter controls
 - Ensures clean document management
 
@@ -122,21 +127,38 @@ If you prefer to run without Docker:
 
 ## Usage Guide
 
-1. **Upload Documents**:
-   - Navigate to the sidebar
-   - Upload one or more PDF, CSV, or TXT files
-   - Wait for processing to complete
+### 1. Choose Conversation Mode
 
-2. **Configure Model Parameters**:
-   - Adjust temperature (0.0-1.0) for creativity control
-   - Set top-p sampling (0.1-1.0) for output diversity
-   - Configure max tokens (64-2048) for response length
-   - Set retrieval context size (1-10) for information retrieval
+The application offers two conversation modes:
 
-3. **Interact with Your Documents**:
-   - Type questions in the chat input
-   - Receive AI-generated responses based on document content
-   - Continue the conversation with follow-up questions
+- **Direct Chat Mode**: Talk directly with the language model without document context
+  - Use this mode for general questions, creative writing, or coding help
+  - Available immediately without document upload
+
+- **Document Chat Mode**: Use retrieval-augmented generation with your documents
+  - Upload documents to enable this mode
+  - Get answers with context from your uploaded content
+
+Switch between modes using the radio buttons in the sidebar.
+
+### 2. Configure Model Parameters
+
+- Adjust temperature (0.0-1.0) for creativity control
+- Set top-p sampling (0.1-1.0) for output diversity
+- Configure max tokens (64-2048) for response length
+- Set retrieval context size (1-10) for information retrieval in Document Chat mode
+
+### 3. Upload Documents (for Document Chat)
+
+- Navigate to the sidebar
+- Upload one or more PDF, CSV, or TXT files
+- Wait for processing to complete
+
+### 4. Start Conversing
+
+- Type questions in the chat input
+- Receive AI-generated responses
+- Continue the conversation with follow-up questions
 
 ## Docker Configuration
 
@@ -187,4 +209,40 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Built with [LangChain](https://www.langchain.com/) framework
 - Vector search powered by [FAISS](https://github.com/facebookresearch/faiss)
 - Language models provided by [Ollama](https://ollama.ai/)
-- User interface created with [Streamlit](https://streamlit.io/) 
+- User interface created with [Streamlit](https://streamlit.io/)
+
+## Application Structure
+
+The application has been refactored to follow a modular structure:
+
+- **config/**: Configuration modules
+  - `settings.py`: Environment-based configuration (development, testing, production)
+  - `model.py`: Model parameters and configuration
+  - `constants.py`: Application constants
+  - `theme.py`: UI theme settings
+  - `colors.py`: Color definitions for the UI
+
+- **services/**: Service modules
+  - `qa_service.py`: Question answering service
+  - `document_service.py`: Document processing service
+  - `database_service.py`: Database service for storing conversations
+
+- **data/**: Data storage
+  - SQLite database files for conversations
+
+## Environment Configuration
+
+The application supports different environments:
+
+- **development**: Default for local development
+- **testing**: For running tests
+- **production**: For production deployment
+
+Set the environment using the `ENV` environment variable in the `.env` file.
+
+## Conversation Storage
+
+The application now stores all conversations in a SQLite database. Each conversation is assigned a UUID and includes:
+
+- Conversation metadata (model, mode, timestamp)
+- All messages exchanged between the user and the assistant 

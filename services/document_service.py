@@ -1,9 +1,18 @@
+"""Document service for processing documents and creating vector stores.
+
+This module provides functionality for processing uploaded documents and
+creating vector stores for efficient retrieval.
+"""
+
 import tempfile
-from typing import List, Dict, Any, Optional
-import streamlit as st
+from typing import List, Optional, Tuple
 
 from langchain_community.vectorstores import FAISS
-from langchain_community.document_loaders import PDFPlumberLoader, CSVLoader, TextLoader
+from langchain_community.document_loaders import (
+    PDFPlumberLoader,
+    CSVLoader,
+    TextLoader,
+)
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_core.vectorstores.base import VectorStoreRetriever
@@ -17,16 +26,19 @@ class DocumentService:
         self.embedder = HuggingFaceEmbeddings()
         self.text_splitter = SemanticChunker(self.embedder)
 
-    def process_files(self, uploaded_files) -> Optional[FAISS]:
+    def process_files(
+        self, uploaded_files
+    ) -> Tuple[Optional[FAISS], Optional[Exception]]:
         """Process multiple uploaded files and combine them into a single vector store.
 
         Parameters:
         -----------
-            uploaded_files: List of uploaded files from Streamlit
+        uploaded_files: List[UploadedFile]
+            List of uploaded files from Streamlit
 
         Returns:
         --------
-            Optional[FAISS]: Combined vector store or None if processing failed
+        Tuple[Optional[FAISS], Optional[Exception]]: Combined vector store and error
         """
         combined_vector_store = None
 
@@ -40,33 +52,35 @@ class DocumentService:
                 tmp_path = tmp.name
 
             try:
-                current_vector_store = self._process_single_file(
+                current_vector_store, error = self._process_single_file(
                     tmp_path, file_extension
                 )
+
+                if error:
+                    return None, error
 
                 if combined_vector_store is None:
                     combined_vector_store = current_vector_store
                 else:
                     combined_vector_store.merge_from(current_vector_store)
-
             except Exception as e:
-                if st:
-                    st.error(f"Error processing {uploaded_file.name}: {str(e)}")
-                print(f"Error processing file: {str(e)}")
-                continue
+                return None, e
 
-        return combined_vector_store
+        return None, None
 
-    def process_uploaded_paths(self, file_paths: List[str]) -> Optional[FAISS]:
+    def process_uploaded_paths(
+        self, file_paths: List[str]
+    ) -> Tuple[Optional[FAISS], Optional[Exception]]:
         """Process multiple file paths and combine them into a single vector store.
 
         Parameters:
         -----------
-            file_paths: List of file paths to process
+        file_paths: List[str]
+            List of paths to files
 
         Returns:
         --------
-            Optional[FAISS]: Combined vector store or None if processing failed
+        Tuple[Optional[FAISS], Optional[Exception]]: Combined vector store and error
         """
         combined_vector_store = None
 
@@ -74,36 +88,41 @@ class DocumentService:
             file_extension = file_path.split(".")[-1].lower()
 
             try:
-                current_vector_store = self._process_single_file(
+                current_vector_store, error = self._process_single_file(
                     file_path, file_extension
                 )
+
+                if error:
+                    return None, error
 
                 if combined_vector_store is None:
                     combined_vector_store = current_vector_store
                 else:
                     combined_vector_store.merge_from(current_vector_store)
-
             except Exception as e:
-                print(f"Error processing file {file_path}: {str(e)}")
-                continue
+                return None, e
 
-        return combined_vector_store
+        return combined_vector_store, None
 
-    def _process_single_file(self, file_path: str, file_extension: str) -> FAISS:
-        """Process a single file based on its extension.
+    def _process_single_file(
+        self, file_path: str, file_extension: str
+    ) -> Tuple[Optional[FAISS], Optional[Exception]]:
+        """Process a single file and create a vector store.
 
         Parameters:
         -----------
-            file_path: Path to the file
-            file_extension: Extension of the file (pdf, csv, txt)
+        file_path: str
+            Path to the file
+        file_extension: str
+            Extension of the file
 
         Returns:
         --------
-            FAISS: Vector store created from the file
+        Tuple[Optional[FAISS], Optional[Exception]]: Vector store and error
 
         Raises:
         -------
-            ValueError: If file type is not supported
+        ValueError: If the file type is not supported
         """
         if file_extension == "pdf":
             return self._process_pdf(file_path)
@@ -112,79 +131,109 @@ class DocumentService:
         elif file_extension == "txt":
             return self._process_txt(file_path)
         else:
-            raise ValueError(f"Unsupported file type: {file_extension}")
+            return None, ValueError(f"Unsupported file type: {file_extension}")
 
-    def _create_vector_store(self, docs) -> FAISS:
+    def _create_vector_store(self, docs) -> Tuple[Optional[FAISS], Optional[Exception]]:
         """Create a vector store from documents.
 
         Parameters:
         -----------
-            docs: Document objects
+        docs: List[Document]
+            List of documents
 
         Returns:
         --------
-            FAISS: Vector store
+        Tuple[Optional[FAISS], Optional[Exception]]: Vector store and error
         """
-        return FAISS.from_documents(docs, self.embedder)
+        try:
+            chunks = self.text_splitter.split_documents(docs)
+            return FAISS.from_documents(chunks, self.embedder), None
+        except Exception as e:
+            return None, e
 
-    def _process_pdf(self, file_path: str) -> FAISS:
+    def _process_pdf(
+        self, file_path: str
+    ) -> Tuple[Optional[FAISS], Optional[Exception]]:
         """Process a PDF file.
 
         Parameters:
         -----------
-            file_path: Path to the PDF file
+        file_path: str
+            Path to the PDF file
 
         Returns:
         --------
-            FAISS: Vector store created from the PDF
+        Tuple[Optional[FAISS], Optional[Exception]]: Vector store and error
         """
-        loader = PDFPlumberLoader(file_path)
-        docs = loader.load()
-        split_docs = self.text_splitter.split_documents(docs)
-        return self._create_vector_store(split_docs)
+        try:
+            loader = PDFPlumberLoader(file_path)
+            documents = loader.load()
 
-    def _process_csv(self, file_path: str) -> FAISS:
+            return self._create_vector_store(documents)
+        except Exception as e:
+            return None, e
+
+    def _process_csv(
+        self, file_path: str
+    ) -> Tuple[Optional[FAISS], Optional[Exception]]:
         """Process a CSV file.
 
         Parameters:
         -----------
-            file_path: Path to the CSV file
+        file_path: str
+            Path to the CSV file
 
         Returns:
         --------
-            FAISS: Vector store created from the CSV
+        Tuple[Optional[FAISS], Optional[Exception]]: Vector store and error
         """
-        loader = CSVLoader(file_path)
-        docs = loader.load()
-        split_docs = self.text_splitter.split_documents(docs)
-        return self._create_vector_store(split_docs)
+        try:
+            loader = CSVLoader(file_path)
+            documents = loader.load()
 
-    def _process_txt(self, file_path: str) -> FAISS:
+            return self._create_vector_store(documents)
+        except Exception as e:
+            return None, e
+
+    def _process_txt(
+        self, file_path: str
+    ) -> Tuple[Optional[FAISS], Optional[Exception]]:
         """Process a text file.
 
         Parameters:
         -----------
-            file_path: Path to the text file
+        file_path: str
+            Path to the text file
 
         Returns:
         --------
-            FAISS: Vector store created from the text file
+        Tuple[Optional[FAISS], Optional[Exception]]: Vector store and error
         """
-        loader = TextLoader(file_path)
-        docs = loader.load()
-        split_docs = self.text_splitter.split_documents(docs)
-        return self._create_vector_store(split_docs)
+        try:
+            loader = TextLoader(file_path)
+            documents = loader.load()
 
-    def create_retriever(self, vector_store: FAISS, top_k: int) -> VectorStoreRetriever:
-        """Create a retriever from a vector store.
+            return self._create_vector_store(documents)
+        except Exception as e:
+            return None, e
+
+    def create_retriever(
+        self, vector_store: FAISS, top_k: int
+    ) -> Tuple[VectorStoreRetriever, Optional[Exception]]:
+        """Create a document retriever from a vector store.
 
         Parameters:
         -----------
-            vector_store: Vector store to create a retriever from
-            top_k: Number of documents to retrieve
+        vector_store: FAISS
+            Vector store to retrieve from
+        top_k: int
+            Number of documents to retrieve
 
         Returns:
         --------
-            VectorStoreRetriever: Retriever
+        Tuple[VectorStoreRetriever, Optional[Exception]]: Document retriever and error
         """
-        return vector_store.as_retriever(search_kwargs={"k": top_k})
+        try:
+            return vector_store.as_retriever(search_kwargs={"k": top_k}), None
+        except Exception as e:
+            return None, e

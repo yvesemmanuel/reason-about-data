@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build: 
@@ -64,4 +62,4 @@ volumes:
 
 networks:
   rag-network:
-    driver: bridge 
+    driver: bridge
